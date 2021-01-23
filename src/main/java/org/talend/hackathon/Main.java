@@ -4,9 +4,11 @@ package org.talend.hackathon;
 import org.apache.commons.io.FileUtils;
 import org.jooq.lambda.Unchecked;
 import org.talend.dataquality.common.inference.Metadata;
+import org.talend.dataquality.datamasking.FunctionMode;
 import org.talend.dataquality.semantic.api.CategoryRegistryManager;
 import org.talend.dataquality.semantic.api.SemanticProperties;
 import org.talend.dataquality.semantic.datamasking.ValueDataMasker;
+import org.talend.dataquality.semantic.recognizer.CategoryRecognizer;
 import org.talend.dataquality.semantic.recognizer.DefaultCategoryRecognizer;
 import org.talend.dataquality.semantic.snapshot.DeletableDictionarySnapshot;
 import org.talend.dataquality.semantic.statistics.SemanticAnalyzer;
@@ -17,9 +19,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -41,61 +41,79 @@ public class Main {
             dictionarySnapshot =
                     categoryRegistryManager.getCustomDictionaryHolder("tenantId").getDeletableDictionarySnapshot().bind();
 
-
             // Discovery - found the type of the column
             List<String> values = asList(null, "FR7630006000011234567890189", "FR0812739000402773652693J61", "FR7414508000501371141778U25", "toto");
-            ArrayList<String> column = new ArrayList();
-            // column name
-            column.add("Iban");
-            // column values
-            column.addAll(values);
-            System.out.println("Column " + column);
 
-            // Found the semantic type of the column
-            List<SemanticType> typeFrequencies =
-                    semanticDiscovery(dictionarySnapshot, true, column);
-            SemanticType semanticType = typeFrequencies.get(0);
-            String semanticTypeName = semanticType.getSuggestedCategory();
-            System.out.println("Found semantic Type " + semanticTypeName);
+            List<String> result = maskData("Iban", values, FunctionMode.RANDOM, null, dictionarySnapshot);
 
-            // Initiate the masker
-            ValueDataMasker masker = new ValueDataMasker(semanticTypeName, "string", dictionarySnapshot);
+            System.out.println("Values " + values);
+            System.out.println("Result " + result);
 
             DefaultCategoryRecognizer categoryRecognizer = new DefaultCategoryRecognizer(dictionarySnapshot);
             categoryRecognizer.prepare();
-
-            ArrayList<String> results = new ArrayList<>(values.size());
             for (String value: values) {
-                if (value == null || value.isEmpty()) {
-                    System.out.println("Unmasked value " + value);
-                    results.add(value);
-                }
-                else {
-                    // Categories found for this value
-                    List<String> categories = Arrays.asList(categoryRecognizer.process(value));
-                    // if categories found contains category of the column
-                    if (categories.contains(semanticTypeName)) {
-                        System.out.println("Value to mask " + value);
-                        String result = masker.maskValue(value);
-                        results.add(result);
-                        System.out.println("Masked value " + masker.maskValue(value));
-                    } else {
-                        System.out.println("Unmasked value " + value);
-                        results.add(value);
-                    }
-                }
+                String maskedValue = maskData("Iban", value, FunctionMode.RANDOM, null, dictionarySnapshot, categoryRecognizer);
+                System.out.println("Value \"" + value + "\" is masked to \"" + maskedValue + "\"");
             }
             categoryRecognizer.end();
 
-            System.out.println("Values " + values);
-            System.out.println("Result " + results);
-        }
-        finally {
+        } finally {
             dictionarySnapshot.release();
             FileUtils.deleteDirectory(new File("/home/skermabon/tmp/tenantId"));
         }
 
         System.out.println("Hackathon end");
+    }
+
+    private static HashMap<String, ValueDataMasker> valueDataMaskers = new HashMap<>();
+
+    private static String maskData(String columnName, String value, FunctionMode mode, String seed, DeletableDictionarySnapshot dictionarySnapshot, CategoryRecognizer categoryRecognizer) {
+        String semanticType = foundSemanticTypeOfColumn(columnName, Collections.singletonList(value), dictionarySnapshot);
+        return maskValue(semanticType, value, FunctionMode.RANDOM, seed, dictionarySnapshot, categoryRecognizer);
+    }
+
+    private static List<String> maskData(String columnName, List<String> values, FunctionMode mode, String seed, DeletableDictionarySnapshot dictionarySnapshot) {
+        String semanticType = foundSemanticTypeOfColumn(columnName, values, dictionarySnapshot);
+        ArrayList<String> results = new ArrayList<>(values.size());
+        DefaultCategoryRecognizer categoryRecognizer = new DefaultCategoryRecognizer(dictionarySnapshot);
+        categoryRecognizer.prepare();
+        for (String value : values) {
+            results.add(maskValue(semanticType, value, FunctionMode.RANDOM, "", dictionarySnapshot, categoryRecognizer));
+        }
+        categoryRecognizer.end();
+
+        return results;
+    }
+
+    private static String foundSemanticTypeOfColumn(String columnName, List<String> values, DeletableDictionarySnapshot dictionarySnapshot) {
+        ArrayList<String> completeColumn = new ArrayList();
+        completeColumn.add(columnName);
+        completeColumn.addAll(values);
+
+        List<SemanticType> typeFrequencies =
+                semanticDiscovery(dictionarySnapshot, true, completeColumn);
+        SemanticType semanticType = typeFrequencies.get(0);
+        String semanticTypeName = semanticType.getSuggestedCategory();
+        return semanticTypeName;
+    }
+
+
+    private static String maskValue(String semanticType, String entry, FunctionMode mode, String seed, DeletableDictionarySnapshot dictionarySnapshot, CategoryRecognizer categoryRecognizer) {
+        if (entry == null || entry.isEmpty()) {
+            return entry;
+        } else {
+            // Categories found for this value
+            List<String> categories = Arrays.asList(categoryRecognizer.process(entry));
+            if (categories.contains(semanticType)) {
+                if (valueDataMaskers.get(semanticType) == null) {
+                    valueDataMaskers.put(semanticType, new ValueDataMasker(semanticType, "string", Collections.EMPTY_LIST, dictionarySnapshot, seed, mode));
+                }
+                ValueDataMasker masker = valueDataMaskers.get(semanticType);
+                return masker.maskValue(entry);
+            } else {
+                return entry;
+            }
+        }
     }
 
     private static void initCustomIndex() throws Exception {
@@ -110,7 +128,7 @@ public class Main {
     }
 
     private static List<SemanticType> semanticDiscovery(DeletableDictionarySnapshot dictionarySnapshot, Boolean hasHeader,
-                                                List<String> lines) {
+                                                        List<String> lines) {
         try (SemanticAnalyzer analyzer = new SemanticAnalyzer(dictionarySnapshot)) {
             if (hasHeader) {
                 analyzer.setMetadata(Metadata.HEADER_NAME, singletonList(lines.remove(0)));
@@ -141,7 +159,6 @@ public class Main {
 //            throw new RuntimeException(e.getMessage(), e);
 //        }
 //    }
-
 
 
 }
