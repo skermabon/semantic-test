@@ -7,6 +7,7 @@ import org.talend.dataquality.datamasking.FunctionMode;
 import org.talend.dataquality.semantic.api.CategoryRegistryManager;
 import org.talend.dataquality.semantic.api.SemanticProperties;
 import org.talend.dataquality.semantic.datamasking.ValueDataMasker;
+import org.talend.dataquality.semantic.model.DQCategory;
 import org.talend.dataquality.semantic.recognizer.CategoryRecognizer;
 import org.talend.dataquality.semantic.recognizer.DefaultCategoryRecognizer;
 import org.talend.dataquality.semantic.snapshot.DeletableDictionarySnapshot;
@@ -37,9 +38,18 @@ public class MaskData {
 
     private List<String> categoriesToMask;
 
-    public MaskData(String dictionaryPath, List<String> categoriesToMask) {
+    private String username;
+
+    private String password;
+
+    private String tdpUrl;
+
+    public MaskData(String dictionaryPath, List<String> categoriesToMask, String tdpUrl, String username, String password) {
         tempDir = (new File(dictionaryPath)).toPath();
         this.categoriesToMask = categoriesToMask;
+        this.username = username;
+        this.password = password;
+        this.tdpUrl = tdpUrl;
     }
 
     public String maskDataRandom(String columnName, String value) throws Exception {
@@ -108,6 +118,7 @@ public class MaskData {
         categoryRecognizer = new DefaultCategoryRecognizer(dictionarySnapshot);
         categoryRecognizer.prepare();
         isInitialize = true;
+
     }
 
     public void release() {
@@ -127,6 +138,28 @@ public class MaskData {
     private void initializeDictionary() {
         SemanticProperties properties = new SemanticProperties(tempDir.toString());
         CategoryRegistryManager categoryRegistryManager = new CategoryRegistryManager(properties);
+        dictionarySnapshot =
+                categoryRegistryManager.getCustomDictionaryHolder("tenantId").getDeletableDictionarySnapshot().bind();
+
+        GetSchema getSchema = new GetSchema(tdpUrl, tdpUrl);
+        String bearer = getSchema.getBearer(username, password);
+
+        SemanticTypeUtil semanticTypeUtil = new SemanticTypeUtil(tdpUrl);
+
+        // Get the list
+        List<DQCategory> list = semanticTypeUtil.getList(bearer);
+
+        System.out.println("Number " + categoryRegistryManager.getCustomDictionaryHolder().listCategories().size());
+
+        for (DQCategory category: list) {
+            DQCategory existingCategory = categoryRegistryManager.getCustomDictionaryHolder().getCategoryMetadataByName(category.getName());
+            if (existingCategory == null) {
+                 categoryRegistryManager.getCustomDictionaryHolder().createCategory(category);
+            }
+        }
+
+        System.out.println("Number " + categoryRegistryManager.getCustomDictionaryHolder().listCategories().size());
+
         dictionarySnapshot =
                 categoryRegistryManager.getCustomDictionaryHolder("tenantId").getDeletableDictionarySnapshot().bind();
     }

@@ -30,11 +30,11 @@
             <artifactId>dataquality-semantic</artifactId>
             <version>${data.quality.lib.ee.version}</version>
         </dependency>
-<!--        <dependency> &lt;!&ndash; TODO Requierd by DQ lib but not transitive? &ndash;&gt;-->
-<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
-<!--            <artifactId>jackson-databind</artifactId>-->
-<!--            <version>2.10.5</version>-->
-<!--        </dependency>-->
+        <dependency> <!-- TODO Requierd by DQ lib but not transitive? -->
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.10.5</version>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

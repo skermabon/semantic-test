@@ -41,7 +41,8 @@ public class Main {
             dictionarySnapshot =
                     categoryRegistryManager.getCustomDictionaryHolder("tenantId").getDeletableDictionarySnapshot().bind();
 
-            // Discovery - found the type of the column
+
+            // Discovery - found the type of the column4
             List<String> values = asList(null, "FR7630006000011234567890189", "FR0812739000402773652693J61", "FR7414508000501371141778U25", "toto");
 
             List<String> result = maskData("Iban", values, FunctionMode.RANDOM, null, dictionarySnapshot);

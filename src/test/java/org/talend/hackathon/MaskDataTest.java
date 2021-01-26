@@ -17,7 +17,7 @@ class MaskDataTest {
         List<String> result = new ArrayList<>(values.size());
         List<String> categoriesToMask = asList("IBAN");
 
-        MaskData maskData = new MaskData("/home/skermabon/tmp", categoriesToMask);
+        MaskData maskData = new MaskData("/home/skermabon/tmp", categoriesToMask, "https://tdp.at.cloud.talend.com/", "skermabon@dataprep.com", "Admin123+");
         try {
             maskData.initialize();
 
@@ -41,7 +41,7 @@ class MaskDataTest {
         List<String> result = new ArrayList<>(values.size());
         List<String> categoriesToMask = asList("MASTERCARD");
 
-        MaskData maskData = new MaskData("/home/skermabon/tmp", categoriesToMask);
+        MaskData maskData = new MaskData("/home/skermabon/tmp", categoriesToMask, "https://tdp.at.cloud.talend.com/", "skermabon@dataprep.com", "Admin123+");
         try {
             maskData.initialize();
 
@@ -65,7 +65,7 @@ class MaskDataTest {
         List<String> result = new ArrayList<>(values.size());
         List<String> categoriesToMask = asList("MASTERCARD", "IBAN");
 
-        MaskData maskData = new MaskData("/home/skermabon/tmp", categoriesToMask);
+        MaskData maskData = new MaskData("/home/skermabon/tmp", categoriesToMask, "https://tdp.at.cloud.talend.com/", "skermabon@dataprep.com", "Admin123+");
         try {
             maskData.initialize();
 
