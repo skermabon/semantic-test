@@ -7,7 +7,9 @@ import org.talend.dataquality.datamasking.FunctionMode;
 import org.talend.dataquality.semantic.api.CategoryRegistryManager;
 import org.talend.dataquality.semantic.api.SemanticProperties;
 import org.talend.dataquality.semantic.datamasking.ValueDataMasker;
+import org.talend.dataquality.semantic.model.CategoryType;
 import org.talend.dataquality.semantic.model.DQCategory;
+import org.talend.dataquality.semantic.model.DQDocument;
 import org.talend.dataquality.semantic.recognizer.CategoryRecognizer;
 import org.talend.dataquality.semantic.recognizer.DefaultCategoryRecognizer;
 import org.talend.dataquality.semantic.snapshot.DeletableDictionarySnapshot;
@@ -177,9 +179,18 @@ public class MaskData {
             DQCategory existingCategory = categoryRegistryManager.getCustomDictionaryHolder("tenantId").getCategoryMetadataByName(category.getName());
             if (existingCategory == null) {
                 categoryRegistryManager.getCustomDictionaryHolder("tenantId").createCategory(category);
+                if (category.getType().equals(CategoryType.DICT)) {
+                    List<DQDocument> dqDocuments = semanticTypeUtil.completeSemanticType(category, bearer);
+                    categoryRegistryManager.getCustomDictionaryHolder("tenantId").addDataDictDocuments(dqDocuments);
+                }
             }
         }
 
+        try {
+            categoryRegistryManager.getCustomDictionaryHolder("tenantId").publishDirectory();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         categoryRegistryManager.reloadCategoriesFromRegistry();
         System.out.println("Number " + categoryRegistryManager.getCustomDictionaryHolder("tenantId").listCategories().size());
 

@@ -58,6 +58,52 @@ class MaskDataTest {
     }
 
     @Test
+    void testLastName() throws Exception {
+        List<String> values = asList(null, "Walker", "Price", "Mendoza", "hector@gmail.com");
+        List<String> result = new ArrayList<>(values.size());
+
+        MaskData maskData = new MaskData("/home/skermabon/tmp", "https://tdp.at.cloud.talend.com/", "skermabon@dataprep.com", "Admin123+");
+        try {
+            maskData.initialize();
+
+            for (String value : values) {
+                result.add(maskData.maskDataRandom("hack21_ctv_LAST_NAME", value, "hack21_ctv_LAST_NAME"));
+            }
+        } finally {
+            maskData.release();
+        }
+
+        assertEquals(values.get(0), result.get(0));
+        assertNotEquals(values.get(1), result.get(1));
+        assertNotEquals(values.get(2), result.get(2));
+        assertNotEquals(values.get(3), result.get(3));
+        assertEquals(values.get(4), result.get(4));
+    }
+
+    @Test
+    void testPostalCode() throws Exception {
+        List<String> values = asList("59618", "06200", "44400", "321", "75000");
+        List<String> result = new ArrayList<>(values.size());
+
+        MaskData maskData = new MaskData("/home/skermabon/tmp", "https://tdp.at.cloud.talend.com/", "skermabon@dataprep.com", "Admin123+");
+        try {
+            maskData.initialize();
+
+            for (String value : values) {
+                result.add(maskData.maskDataRandom("ZipCode", value));
+            }
+        } finally {
+            maskData.release();
+        }
+
+        assertEquals(values.get(0), result.get(0));
+        assertNotEquals(values.get(1), result.get(1));
+        assertNotEquals(values.get(2), result.get(2));
+        assertNotEquals(values.get(3), result.get(3));
+        assertEquals(values.get(4), result.get(4));
+    }
+
+    @Test
     void testEmail() throws Exception {
         List<String> values = asList(null, "Maurice@google.com", "Jean@yahoo.fr", "Pierre@microsoft.com", "Stéphane");
         List<String> result = new ArrayList<>(values.size());
