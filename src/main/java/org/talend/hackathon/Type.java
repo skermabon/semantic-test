@@ -1,6 +1,24 @@
 package org.talend.hackathon;
 
 public class Type {
+    public String getDqType() {
+        return dqType;
+    }
+
+    public void setDqType(String dqType) {
+        this.dqType = dqType;
+    }
+
+    private String dqType;
+
+    @Override
+    public String toString() {
+        return "Type{" +
+                "dqType='" + dqType + '\'' +
+                ", dataType='" + dataType + '\'' +
+                ", dqTypeId='" + dqTypeId + '\'' +
+                '}';
+    }
 
     public String getDataType() {
         return dataType;
@@ -21,4 +39,5 @@ public class Type {
     private String dataType;
 
     private String dqTypeId;
+
 }

@@ -13,4 +13,11 @@ public class Schema {
     }
 
     private List<Field> fields;
+
+    @Override
+    public String toString() {
+        return "Schema{" +
+                "fields=" + fields +
+                '}';
+    }
 }

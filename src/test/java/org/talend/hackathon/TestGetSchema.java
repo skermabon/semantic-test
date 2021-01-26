@@ -11,7 +11,7 @@ public class TestGetSchema {
     public void testGetSchema() {
         GetSchema getSchema = new GetSchema("https://tdp.at.cloud.talend.com", "https://tdp.at.cloud.talend.com");
 
-        Schema schema = getSchema.getSchema("8b576a70-c9ca-4ed7-abad-c4831ce509ee", bearer);
+        Schema schema = getSchema.getSchema("8779cbf2-b507-4072-afd7-e6af66c2da78", bearer);
 
         Assertions.assertNotNull(schema);
     }
@@ -28,7 +28,7 @@ public class TestGetSchema {
     public void testAll() {
         GetSchema getSchema = new GetSchema("https://tdp.at.cloud.talend.com", "https://tdp.at.cloud.talend.com");
 
-        Schema schema = getSchema.getSchema("8b576a70-c9ca-4ed7-abad-c4831ce509ee", getSchema.getBearer("skermabon@dataprep.com", "Admin123+"));
+        Schema schema = getSchema.getSchema("8779cbf2-b507-4072-afd7-e6af66c2da78", getSchema.getBearer("skermabon@dataprep.com", "Admin123+"));
         Assertions.assertNotNull(schema);
     }
 }
