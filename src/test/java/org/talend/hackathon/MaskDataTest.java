@@ -35,6 +35,52 @@ class MaskDataTest {
     }
 
     @Test
+    void testFirstName() throws Exception {
+        List<String> values = asList(null, "FR7630006000011234567890189", "Jean", "Pierre", "Stéphane");
+        List<String> result = new ArrayList<>(values.size());
+
+        MaskData maskData = new MaskData("/home/skermabon/tmp", "https://tdp.at.cloud.talend.com/", "skermabon@dataprep.com", "Admin123+");
+        try {
+            maskData.initialize();
+
+            for (String value : values) {
+                result.add(maskData.maskDataRandom("Firstname", value, "FIRST_NAME"));
+            }
+        } finally {
+            maskData.release();
+        }
+
+        assertEquals(values.get(0), result.get(0));
+        assertNotEquals(values.get(1), result.get(1));
+        assertNotEquals(values.get(2), result.get(2));
+        assertNotEquals(values.get(3), result.get(3));
+        assertEquals(values.get(4), result.get(4));
+    }
+
+    @Test
+    void testEmail() throws Exception {
+        List<String> values = asList(null, "Maurice@google.com", "Jean@yahoo.fr", "Pierre@microsoft.com", "Stéphane");
+        List<String> result = new ArrayList<>(values.size());
+
+        MaskData maskData = new MaskData("/home/skermabon/tmp", "https://tdp.at.cloud.talend.com/", "skermabon@dataprep.com", "Admin123+");
+        try {
+            maskData.initialize();
+
+            for (String value : values) {
+                result.add(maskData.maskDataRandom("Email", value));
+            }
+        } finally {
+            maskData.release();
+        }
+
+        assertEquals(values.get(0), result.get(0));
+        assertNotEquals(values.get(1), result.get(1));
+        assertNotEquals(values.get(2), result.get(2));
+        assertNotEquals(values.get(3), result.get(3));
+        assertEquals(values.get(4), result.get(4));
+    }
+
+    @Test
     void testMasterCard() throws Exception {
         List<String> values = asList(null, "5111329517077127", "5108337962302580", "5102325872712598", "FR7630006000011234567890189");
         List<String> result = new ArrayList<>(values.size());

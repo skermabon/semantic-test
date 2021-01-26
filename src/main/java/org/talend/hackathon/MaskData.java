@@ -64,17 +64,27 @@ public class MaskData {
         return maskData(columnName, value, FunctionMode.RANDOM, null, categories);
     }
 
-    private String maskData(String columnName, String value, FunctionMode mode, String seed, List<String> categoriesToMask) throws Exception{
+    private String maskData(String columnName, String value, FunctionMode mode, String seed, List<String> categoriesToMask) throws Exception {
         if (!isInitialize) {
             initialize();
         }
-        String semanticType = foundSemanticTypeOfColumn(columnName, Collections.singletonList(value), dictionarySnapshot);
-        if (categoriesToMask.contains(semanticType)) {
+        List<String> semanticTypes = foundSemanticTypeOfColumn(columnName, Collections.singletonList(value), dictionarySnapshot);
+        String semanticType = oneSemanticIsPresent(categoriesToMask, semanticTypes);
+
+        if (semanticType != null) {
             return maskValue(semanticType, value, FunctionMode.RANDOM, seed, dictionarySnapshot, categoryRecognizer);
-        }
-        else {
+        } else {
             return value;
         }
+    }
+
+    private String oneSemanticIsPresent(List<String> categoriesToMask, List<String> semanticTypes) {
+        for (String semanticType : semanticTypes) {
+            if (categoriesToMask.contains(semanticType)) {
+                return semanticType;
+            }
+        }
+        return null;
     }
 
     private String maskValue(String semanticType, String entry, FunctionMode mode, String seed, DeletableDictionarySnapshot dictionarySnapshot, CategoryRecognizer categoryRecognizer) {
@@ -96,16 +106,21 @@ public class MaskData {
     }
 
 
-    private String foundSemanticTypeOfColumn(String columnName, List<String> values, DeletableDictionarySnapshot dictionarySnapshot) {
+    private List<String> foundSemanticTypeOfColumn(String columnName, List<String> values, DeletableDictionarySnapshot dictionarySnapshot) {
         ArrayList<String> completeColumn = new ArrayList(values.size() + 1);
         completeColumn.add(columnName);
         completeColumn.addAll(values);
 
-        List<SemanticType> typeFrequencies =
-                semanticDiscovery(dictionarySnapshot, true, completeColumn);
-        SemanticType semanticType = typeFrequencies.get(0);
-        String semanticTypeName = semanticType.getSuggestedCategory();
-        return semanticTypeName;
+        List<SemanticType> semanticTypes = semanticDiscovery(dictionarySnapshot, true, completeColumn);
+        if (semanticTypes != null && semanticTypes.size() > 0) {
+            return semanticTypes.stream().map(s -> s.getSuggestedCategory()).collect(Collectors.toList());
+        } else {
+            return Collections.emptyList();
+        }
+
+//        SemanticType semanticType = typeFrequencies.get(0);
+//        String semanticTypeName = semanticType.getSuggestedCategory();
+//        return semanticTypeName;
     }
 
     private static List<SemanticType> semanticDiscovery(DeletableDictionarySnapshot dictionarySnapshot, Boolean hasHeader,
@@ -157,15 +172,17 @@ public class MaskData {
         // Get the list
         List<DQCategory> list = semanticTypeUtil.getList(bearer);
 
-        System.out.println("Number " + categoryRegistryManager.getCustomDictionaryHolder().listCategories().size());
-        for (DQCategory category: list) {
-            DQCategory existingCategory = categoryRegistryManager.getCustomDictionaryHolder().getCategoryMetadataByName(category.getName());
+        System.out.println("Number " + categoryRegistryManager.getCustomDictionaryHolder("tenantId").listCategories().size());
+        for (DQCategory category : list) {
+            DQCategory existingCategory = categoryRegistryManager.getCustomDictionaryHolder("tenantId").getCategoryMetadataByName(category.getName());
             if (existingCategory == null) {
-                 categoryRegistryManager.getCustomDictionaryHolder().createCategory(category);
+                categoryRegistryManager.getCustomDictionaryHolder("tenantId").createCategory(category);
             }
         }
 
-        System.out.println("Number " + categoryRegistryManager.getCustomDictionaryHolder().listCategories().size());
+        categoryRegistryManager.reloadCategoriesFromRegistry();
+        System.out.println("Number " + categoryRegistryManager.getCustomDictionaryHolder("tenantId").listCategories().size());
+
         defaultCategoriesToMask = list.stream().map(c -> c.getName()).collect(Collectors.toList());
         dictionarySnapshot =
                 categoryRegistryManager.getCustomDictionaryHolder("tenantId").getDeletableDictionarySnapshot().bind();
