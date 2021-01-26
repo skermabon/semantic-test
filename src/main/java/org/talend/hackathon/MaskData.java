@@ -37,7 +37,7 @@ public class MaskData {
 
     DefaultCategoryRecognizer categoryRecognizer;
 
-    private List<String> categoriesToMask;
+    private List<String> defaultCategoriesToMask;
 
     private String username;
 
@@ -53,10 +53,18 @@ public class MaskData {
     }
 
     public String maskDataRandom(String columnName, String value) throws Exception {
-        return maskData(columnName, value, FunctionMode.RANDOM, null);
+        return maskData(columnName, value, FunctionMode.RANDOM, null, defaultCategoriesToMask);
     }
 
-    public String maskData(String columnName, String value, FunctionMode mode, String seed) throws Exception{
+    public String maskDataRandom(String columnName, String value, String category) throws Exception {
+        return maskData(columnName, value, FunctionMode.RANDOM, null, Collections.singletonList(category));
+    }
+
+    public String maskDataRandom(String columnName, String value, List<String> categories) throws Exception {
+        return maskData(columnName, value, FunctionMode.RANDOM, null, categories);
+    }
+
+    private String maskData(String columnName, String value, FunctionMode mode, String seed, List<String> categoriesToMask) throws Exception{
         if (!isInitialize) {
             initialize();
         }
@@ -150,7 +158,6 @@ public class MaskData {
         List<DQCategory> list = semanticTypeUtil.getList(bearer);
 
         System.out.println("Number " + categoryRegistryManager.getCustomDictionaryHolder().listCategories().size());
-
         for (DQCategory category: list) {
             DQCategory existingCategory = categoryRegistryManager.getCustomDictionaryHolder().getCategoryMetadataByName(category.getName());
             if (existingCategory == null) {
@@ -159,9 +166,7 @@ public class MaskData {
         }
 
         System.out.println("Number " + categoryRegistryManager.getCustomDictionaryHolder().listCategories().size());
-
-        categoriesToMask = list.stream().map(c -> c.getName()).collect(Collectors.toList());
-
+        defaultCategoriesToMask = list.stream().map(c -> c.getName()).collect(Collectors.toList());
         dictionarySnapshot =
                 categoryRegistryManager.getCustomDictionaryHolder("tenantId").getDeletableDictionarySnapshot().bind();
     }

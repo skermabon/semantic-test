@@ -3,7 +3,6 @@ package org.talend.hackathon;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.talend.dataquality.semantic.model.DQCategory;
-import org.talend.dataquality.semantic.statistics.SemanticType;
 
 import java.util.List;
 
@@ -20,6 +19,5 @@ public class SemanticTypeUtilTest {
 
         Assertions.assertNotNull(list);
         Assertions.assertTrue(list.size() > 10);
-
     }
 }

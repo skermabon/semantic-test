@@ -15,14 +15,13 @@ class MaskDataTest {
     void testIban() throws Exception {
         List<String> values = asList(null, "FR7630006000011234567890189", "FR0812739000402773652693J61", "FR7414508000501371141778U25", "toto");
         List<String> result = new ArrayList<>(values.size());
-        List<String> categoriesToMask = asList("IBAN");
 
         MaskData maskData = new MaskData("/home/skermabon/tmp", "https://tdp.at.cloud.talend.com/", "skermabon@dataprep.com", "Admin123+");
         try {
             maskData.initialize();
 
             for (String value : values) {
-                result.add(maskData.maskDataRandom("Iban", value));
+                result.add(maskData.maskDataRandom("Iban", value, "IBAN"));
             }
         } finally {
             maskData.release();
@@ -39,14 +38,13 @@ class MaskDataTest {
     void testMasterCard() throws Exception {
         List<String> values = asList(null, "5111329517077127", "5108337962302580", "5102325872712598", "FR7630006000011234567890189");
         List<String> result = new ArrayList<>(values.size());
-        List<String> categoriesToMask = asList("MASTERCARD");
 
         MaskData maskData = new MaskData("/home/skermabon/tmp", "https://tdp.at.cloud.talend.com/", "skermabon@dataprep.com", "Admin123+");
         try {
             maskData.initialize();
 
             for (String value : values) {
-                result.add(maskData.maskDataRandom("Iban", value));
+                result.add(maskData.maskDataRandom("Iban", value, "MASTERCARD"));
             }
         } finally {
             maskData.release();
@@ -70,7 +68,7 @@ class MaskDataTest {
             maskData.initialize();
 
             for (String value : values) {
-                result.add(maskData.maskDataRandom("Iban", value));
+                result.add(maskData.maskDataRandom("Iban", value, categoriesToMask));
             }
         } finally {
             maskData.release();
