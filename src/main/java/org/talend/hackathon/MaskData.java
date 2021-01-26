@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
 
@@ -44,9 +45,8 @@ public class MaskData {
 
     private String tdpUrl;
 
-    public MaskData(String dictionaryPath, List<String> categoriesToMask, String tdpUrl, String username, String password) {
+    public MaskData(String dictionaryPath, String tdpUrl, String username, String password) {
         tempDir = (new File(dictionaryPath)).toPath();
-        this.categoriesToMask = categoriesToMask;
         this.username = username;
         this.password = password;
         this.tdpUrl = tdpUrl;
@@ -159,6 +159,8 @@ public class MaskData {
         }
 
         System.out.println("Number " + categoryRegistryManager.getCustomDictionaryHolder().listCategories().size());
+
+        categoriesToMask = list.stream().map(c -> c.getName()).collect(Collectors.toList());
 
         dictionarySnapshot =
                 categoryRegistryManager.getCustomDictionaryHolder("tenantId").getDeletableDictionarySnapshot().bind();
